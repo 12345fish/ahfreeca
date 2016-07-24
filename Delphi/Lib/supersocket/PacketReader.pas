@@ -9,6 +9,9 @@ uses
   Windows, Classes, SysUtils, SyncObjs;
 
 type
+  {*
+    TCP 패킷이 조각이 나거나 합쳐져서 들어오는 것을 패킷 단위로 분리하기 위한 클래스이다.
+  }
   TPacketReader = class
   private
     FCS : TCriticalSection;
@@ -24,10 +27,24 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    /// 내부 버퍼에 있는 모든 패킷을 삭제한다.
     procedure Clear;
+
+    /// 소켓에서 수신 받은 패킷을 저장한다.
     procedure AddData(AData:pointer; ASize:integer);
+
+    {*
+      완성 된 패킷이 있으면 리턴한다.  리턴 된 패킷은 내부 버퍼에서 삭제된다.
+      @param ACustomData 패킷마다 4바이트로 된 더미가 있다.  개인적으로 사용하는 영역이다.
+      @param AData 해더를 포함한 패킷이다.
+             [Packet] = [Header] [Data]
+             [Header] = [CustomData: DWord] [Data Size: Word]
+      @param ASize 해더를 포함한 패킷의 크기이다.
+      @return boolean 완성 된 패킷이 리턴되었는 지 여부.
+    }
     function GetPacket(var ACustomData:DWord; var AData:pointer; var ASize:integer):boolean;
 
+    /// 가장 오래 된 패킷의 크기를 리턴한다.  패킷은 내부 버퍼에서 변화가 없다.
     property CurrentPacketSize : integer read GetCurrentPacketSize;
   end;
 
